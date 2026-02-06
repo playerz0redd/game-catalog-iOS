@@ -11,7 +11,7 @@ import Kingfisher
 
 protocol IGamesCatalogService {
     
-    func fetchGamesList(genre: String?) async throws -> GamesApiResponse<[GameModel]>
+    func fetchGamesList(genre: String?, search: String?) async throws -> GamesApiResponse<[GameModel]>
     func prefetchImages(urls: [String])
     func clearCache()
     func getGenres() async throws -> GamesApiResponse<[GenreModel]>
@@ -22,11 +22,9 @@ final class GamesCatalogService: IGamesCatalogService {
     
     private var currentPage: Int = 1
     private let networkManager: INetworkManager
-    private let cachingManager: ICacheManager
     
-    init(networkManager: INetworkManager, cachingManager: ICacheManager) {
+    init(networkManager: INetworkManager) {
         self.networkManager = networkManager
-        self.cachingManager = cachingManager
     }
     
     func prefetchImages(urls: [String]) {
@@ -40,10 +38,13 @@ final class GamesCatalogService: IGamesCatalogService {
         ImageCache.default.clearDiskCache()
     }
     
-    func fetchGamesList(genre: String? = nil) async throws -> GamesApiResponse<[GameModel]> {
+    func fetchGamesList(
+        genre: String? = nil,
+        search: String? = nil
+    ) async throws -> GamesApiResponse<[GameModel]> {
         do {
             let data = try await networkManager.fetch(
-                url: ListGamesEndpoints.listGames(page: currentPage, genre: genre).url
+                url: ListGamesEndpoints.listGames(page: currentPage, genre: genre, search: search).url
             )
             currentPage += 1
             return try DecodeManager.decode(data: data, as: GamesApiResponse.self)

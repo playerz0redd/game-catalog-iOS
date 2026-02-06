@@ -7,12 +7,26 @@
 
 import SwiftUI
 
-struct CapsuleWithContent: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+struct CapsuleWithContent<Content: View>: View {
+    
+    @ViewBuilder private let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
     }
-}
-
-#Preview {
-    CapsuleWithContent()
+    
+    var body: some View {
+        
+        content
+            .font(.system(size: 14, weight: .semibold))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background {
+                Capsule()
+                    .stroke(lineWidth: 1.2)
+            }
+            .foregroundStyle(.gray)
+            .opacity(0.55)
+        
+    }
 }

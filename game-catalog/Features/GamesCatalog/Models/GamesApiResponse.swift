@@ -7,12 +7,7 @@
 
 import Foundation
 
-struct GamesApiResponse: Decodable {
+struct GamesApiResponse<T: Decodable>: Decodable {
     let count: Int
-    let games: [GameModel]
-    
-    enum CodingKeys: String, CodingKey {
-        case count
-        case games = "results"
-    }
+    let results: T
 }

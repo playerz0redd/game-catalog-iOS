@@ -25,24 +25,11 @@ struct GamesCatalogView: View {
         ScrollView {
             
             VStack(alignment: .leading) {
-                
-                Button {
-                    viewModel.isShowingGenres = true
-                } label: {
-                    CapsuleWithContent {
-                        HStack {
-                            Text("Категории")
-                            
-                            Image(systemName: "chevron.down")
-                        }
-                    }
-                    .padding(.leading, 2)
-                }
 
                 
                 LazyVGrid(columns: columns) {
                     ForEach(viewModel.games, id: \.id) { game in
-                        GameCell(imageLoader: viewModel.gamesCatalogService, game: game)
+                        GameCell(game: game)
                             .onAppear {
                                 if game.id == viewModel.games[viewModel.games.count - 10].id {
                                     viewModel.loadMoreGames()
@@ -57,6 +44,44 @@ struct GamesCatalogView: View {
                 ProgressView()
             }
         }
+        .overlay(alignment: .top) {
+            if viewModel.isHeaderVisible {
+                HStack {
+                    genrePickerButton
+                    
+                    TextField("",
+                              text: $viewModel.searchText,
+                              prompt: Text("Поиск")
+                        .foregroundStyle(.black)
+                        .font(.system(size: 14, weight: .semibold))
+                    )
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.black)
+                    .padding(.leading, 10)
+                    .padding(.vertical, 6.5)
+                    .background {
+                        Capsule()
+                            .fill(.white.opacity(0.95))
+                    }
+                    .onSubmit {
+                        viewModel.findGameBySearch()
+                    }
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.horizontal, 2)
+            }
+        }
+        .animation(.bouncy, value: viewModel.isHeaderVisible)
+        .onScrollGeometryChange(for: CGFloat.self, of: { geo in
+            geo.contentOffset.y
+        }, action: { oldValue, newValue in
+            if newValue > oldValue && newValue > 50 {
+                viewModel.isHeaderVisible = false
+            }
+            else if newValue < oldValue {
+                viewModel.isHeaderVisible = true
+            }
+        })
         .animation(.bouncy, value: viewModel.games)
         .blur(radius: viewModel.isShowingGenres ? 30 : 0)
         .overlay {
@@ -80,6 +105,28 @@ struct GamesCatalogView: View {
         .animation(.easeInOut, value: viewModel.isShowingGenres)
     
     }
+}
+
+private extension GamesCatalogView {
+    
+    var genrePickerButton: some View {
+        Button {
+            viewModel.onGenreButtonClick()
+        } label: {
+            HStack {
+                CapsuleWithContent {
+                    HStack {
+                        Text(viewModel.selectedGenre == nil ? "Жанры" : viewModel.selectedGenre!)
+                        
+                        Image(systemName: viewModel.selectedGenre == nil ? "chevron.down" : "xmark")
+                    }
+                    .foregroundStyle(.black)
+                }
+                
+            }
+        }
+    }
+    
 }
 
 private extension GamesCatalogView {

@@ -8,7 +8,7 @@
 import Foundation
 
 enum ListGamesEndpoints {
-    case listGames(page: Int, genre: String? = nil)
+    case listGames(page: Int, genre: String? = nil, search: String? = nil)
     case genres(page: Int)
     
     private var path: String {
@@ -30,11 +30,14 @@ enum ListGamesEndpoints {
         var queryItems: [URLQueryItem] = [.init(name: "key", value: token)]
         
         switch self {
-        case .listGames(let page, let genre):
+        case .listGames(let page, let genre, let search):
             queryItems.append(.init(name: "page", value: String(page)))
             queryItems.append(.init(name: "page_size", value: String(Self.PAGE_SIZE)))
             if let genre = genre {
                 queryItems.append(.init(name: "genre", value: genre))
+            }
+            if let search = search {
+                queryItems.append(.init(name: "search", value: search))
             }
         case .genres(let page):
             queryItems.append(.init(name: "page", value: String(page)))

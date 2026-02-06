@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GamesListResponseModel: Decodable {
+struct GamesApiResponse: Decodable {
     let count: Int
     let games: [GameModel]
     

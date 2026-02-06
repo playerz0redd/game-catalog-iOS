@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         NavigationStack {
-            GamesCatalogView(viewModel: .init(gamesCatalogService: GamesCatalogService(networkManager: NetworkManager(), cachingManager: CachingManager())))
+            GamesCatalogView(viewModel: .init(gamesCatalogService: GamesCatalogService(networkManager: NetworkManager())))
                 .navigationTitle(Text("Game List"))
                 .navigationBarTitleDisplayMode(.inline)
         }

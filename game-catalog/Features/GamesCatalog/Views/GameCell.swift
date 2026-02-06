@@ -6,13 +6,41 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct GameCell: View {
+    
+    private let game: GameModel
+    
+    init(game: GameModel) {
+        self.game = game
+    }
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+
+        VStack(alignment: .leading, spacing: 8) {
+
+                Color.gray.opacity(0.3)
+                    .aspectRatio(1, contentMode: .fill)
+                    .overlay(
+                        KFImage(URL(string: game.backgroundImage ?? ""))
+                            .placeholder { ProgressView() }
+                            .onFailure { error in print("Ошибка: \(error)") }
+                            .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 400, height: 400)))
+                            .cacheMemoryOnly(false)
+                            .fade(duration: 0.25)  
+                            .resizable()
+                            .scaledToFill()
+                    )
+                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                
+            
+            Text(game.name)
+                .font(.caption)
+                .fontWeight(.medium)
+                .lineLimit(1)
+        }
     }
 }
 
-#Preview {
-    GameCell()
-}

@@ -20,13 +20,12 @@ struct CapsuleWithContent<Content: View>: View {
         content
             .font(.system(size: 14, weight: .semibold))
             .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .padding(.vertical, 9)
             .background {
                 Capsule()
-                    .stroke(lineWidth: 1.2)
+                    .fill(.white.opacity(0.95))
             }
             .foregroundStyle(.gray)
-            .opacity(0.55)
         
     }
 }

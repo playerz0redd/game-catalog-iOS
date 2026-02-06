@@ -14,7 +14,9 @@ final class GamesCatalogViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isShowingGenres = false
     @Published var genres: [GenreModel] = []
-    @Published var selectedGenre: String? 
+    @Published var selectedGenre: String?
+    @Published var isHeaderVisible: Bool = true
+    @Published var searchText: String = ""
     
     let gamesCatalogService: IGamesCatalogService
     
@@ -29,7 +31,11 @@ final class GamesCatalogViewModel: ObservableObject {
         isLoading = true
         
         Task(priority: .userInitiated) {
-            let response = try await gamesCatalogService.fetchGamesList(genre: selectedGenre)
+            let response = try await gamesCatalogService.fetchGamesList(
+                genre: selectedGenre,
+                search: searchText == "" ? nil : searchText
+            )
+            
             let newGames = response.results
             
             let urls = newGames.compactMap({ $0.backgroundImage })
@@ -41,6 +47,21 @@ final class GamesCatalogViewModel: ObservableObject {
                 isLoading = false
             }
         }
+    }
+    
+    func onGenreButtonClick() {
+        if selectedGenre != nil {
+            selectedGenre = nil
+            games = []
+            loadMoreGames()
+        } else {
+            isShowingGenres = true
+        }
+    }
+    
+    func findGameBySearch() {
+        games = []
+        loadMoreGames()
     }
     
     func getGenres() {

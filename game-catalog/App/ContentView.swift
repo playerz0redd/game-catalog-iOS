@@ -9,13 +9,11 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            GamesCatalogView(viewModel: .init(gamesCatalogService: GamesCatalogService(networkManager: NetworkManager(), cachingManager: CachingManager())))
+                .navigationTitle(Text("Game List"))
+                .navigationBarTitleDisplayMode(.inline)
         }
-        .padding()
     }
 }
 

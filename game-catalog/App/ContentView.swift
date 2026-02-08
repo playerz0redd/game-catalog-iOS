@@ -8,15 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @StateObject private var coordinator = AppCoordinator()
+    
     var body: some View {
-        NavigationStack {
-            GamesCatalogView(viewModel: .init(gamesCatalogService: GamesCatalogService(networkManager: NetworkManager())))
-                .navigationTitle(Text("Game List"))
-                .navigationBarTitleDisplayMode(.inline)
+        NavigationStack(path: $coordinator.path) {
+            coordinator.getView(route: .catalog)
+                .navigationDestination(for: AppRouter.self) { route in
+                    coordinator.getView(route: route)
+                }
         }
+        .environmentObject(coordinator)
     }
-}
-
-#Preview {
-    ContentView()
 }

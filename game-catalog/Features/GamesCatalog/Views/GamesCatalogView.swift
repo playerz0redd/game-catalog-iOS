@@ -10,6 +10,7 @@ import SwiftUI
 
 struct GamesCatalogView: View {
     @ObservedObject private var viewModel: GamesCatalogViewModel
+    @EnvironmentObject var coordinator: AppCoordinator
     
     init(viewModel: GamesCatalogViewModel) {
         self.viewModel = viewModel
@@ -29,12 +30,12 @@ struct GamesCatalogView: View {
                 
                 LazyVGrid(columns: columns) {
                     ForEach(viewModel.games, id: \.id) { game in
-                        GameCell(game: game)
-                            .onAppear {
-                                if game.id == viewModel.games[viewModel.games.count - 10].id {
-                                    viewModel.loadMoreGames()
-                                }
-                            }
+                        Button {
+                            coordinator.push(route: .details(gameId: game.id))
+                        } label: {
+                            gameCellButton(game: game)
+                        }
+
                     }
                 }
             }
@@ -103,7 +104,20 @@ struct GamesCatalogView: View {
             .ignoresSafeArea()
         }
         .animation(.easeInOut, value: viewModel.isShowingGenres)
+        .navigationTitle("Game Details")
+        .navigationBarTitleDisplayMode(.inline)
     
+    }
+}
+
+private extension GamesCatalogView {
+    func gameCellButton(game: GameModel) -> some View {
+        GameCell(game: game)
+            .onAppear {
+                if game.id == viewModel.games[viewModel.games.count - 10].id {
+                    viewModel.loadMoreGames()
+                }
+            }
     }
 }
 

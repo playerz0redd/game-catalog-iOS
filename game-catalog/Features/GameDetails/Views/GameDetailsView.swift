@@ -6,13 +6,36 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct GameDetailsView: View {
+    
+    @ObservedObject private var viewModel: GameDetailsViewModel
+    
+    init(viewModel: GameDetailsViewModel) {
+        self.viewModel = viewModel
+    }
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ScrollView {
+            gameImage
+        }
+        .navigationTitle("Game Details")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
-#Preview {
-    GameDetailsView()
+private extension GameDetailsView {
+    
+    @ViewBuilder var gameImage: some View {
+            KFImage(URL(string: viewModel.detailsModel?.details.imageUrl ?? ""))
+                .placeholder { ProgressView() }
+                .onFailure { error in print("Ошибка: \(error)") }
+                .cacheMemoryOnly(false)
+                .fade(duration: 0.25)
+                .resizable()
+                .scaledToFit()
+            //.frame(width: 300, height: 800)
+    }
+    
 }

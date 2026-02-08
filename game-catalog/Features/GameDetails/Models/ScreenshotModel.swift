@@ -6,3 +6,14 @@
 //
 
 import Foundation
+
+struct ScreenshotModel: Decodable {
+    let id: Int
+    let url: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case url = "image"
+    }
+    
+}

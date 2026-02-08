@@ -6,3 +6,10 @@
 //
 
 import Foundation
+
+struct GameCoreDetailsModel {
+    let details: GameDetailsModel
+    let screenshots: [ScreenshotModel]?
+    let videos: [GameVideoModel]?
+    let stores: [GameInStoresModel]?
+}

@@ -13,6 +13,13 @@ struct GameVideoModel: Decodable {
     let preview: String
     let videos: VideoQualityUrls
     
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case preview
+        case videos = "data"
+    }
+    
     
     struct VideoQualityUrls: Decodable {
         let low: String?

@@ -7,14 +7,22 @@
 
 import Foundation
 
-enum ListGamesEndpoints {
+enum GameApiEndpoints {
     case listGames(page: Int, genre: String? = nil, search: String? = nil)
     case genres(page: Int)
+    case gameDetails(gameId: Int)
+    case gameScreenshots(gameId: Int)
+    case gameStores(gameId: Int)
+    case gameVideos(gameId: Int)
     
     private var path: String {
         switch self {
-        case .listGames:    "games"
-        case .genres:       "genres"
+        case .listGames:                       "games"
+        case .genres:                          "genres"
+        case .gameDetails(let gameId):         "games/\(gameId)"
+        case .gameScreenshots(let gameId):     "games/\(gameId)/screenshots"
+        case .gameStores(let gameId):          "games/\(gameId)/stores"
+        case .gameVideos(let gameId):          "games/\(gameId)/movies"
         }
     }
     
@@ -41,6 +49,14 @@ enum ListGamesEndpoints {
             }
         case .genres(let page):
             queryItems.append(.init(name: "page", value: String(page)))
+        case .gameDetails:
+            break
+        case .gameScreenshots:
+            queryItems.append(.init(name: "page_size", value: String(Self.PAGE_SIZE)))
+        case .gameStores:
+            queryItems.append(.init(name: "page_size", value: String(Self.PAGE_SIZE)))
+        case .gameVideos:
+            break
         }
         
         components.queryItems = queryItems

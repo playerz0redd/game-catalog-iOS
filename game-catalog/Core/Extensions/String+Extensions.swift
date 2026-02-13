@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+
+extension String {
+    
+    func getFirstWords(amount: Int) -> String {
+        self.split(separator: " ").prefix(amount).joined(separator: " ")
+    }
+    
+}

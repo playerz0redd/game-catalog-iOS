@@ -19,6 +19,7 @@ final class GamesCatalogViewModel: ObservableObject {
     @Published var searchText: String = ""
     
     let gamesCatalogService: IGamesCatalogService
+    var coordinator: AppCoordinator?
     
     init(gamesCatalogService: IGamesCatalogService) {
         self.gamesCatalogService = gamesCatalogService

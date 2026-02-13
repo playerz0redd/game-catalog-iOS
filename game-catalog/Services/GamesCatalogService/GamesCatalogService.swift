@@ -18,7 +18,8 @@ protocol IGamesCatalogService {
     func getGameDetails(gameId: Int) async throws -> GameDetailsModel
     func getGameStores(gameId: Int) async throws -> GamesApiResponse<[GameInStoresModel]?>
     func getGameVideos(gameId: Int) async throws -> GamesApiResponse<[GameVideoModel]?>
-    func getGameScreenshots(gameId: Int) async throws -> GamesApiResponse<[ScreenshotModel]?> 
+    func getGameScreenshots(gameId: Int) async throws -> GamesApiResponse<[ScreenshotModel]?>
+    func getStores() async throws -> GamesApiResponse<[StoreModel]>
     
 }
 
@@ -76,6 +77,10 @@ final class GamesCatalogService: IGamesCatalogService {
     
     func getGameScreenshots(gameId: Int) async throws -> GamesApiResponse<[ScreenshotModel]?> {
         try await performApiRequest(endpoint: GameApiEndpoints.gameScreenshots(gameId: gameId), type: GamesApiResponse<[ScreenshotModel]?>.self)
+    }
+    
+    func getStores() async throws -> GamesApiResponse<[StoreModel]> {
+        try await performApiRequest(endpoint: GameApiEndpoints.stores, type: GamesApiResponse<[StoreModel]>.self)
     }
     
     private func performApiRequest<T: Decodable>(endpoint: GameApiEndpoints, type: T.Type) async throws -> T {

@@ -14,6 +14,7 @@ enum GameApiEndpoints {
     case gameScreenshots(gameId: Int)
     case gameStores(gameId: Int)
     case gameVideos(gameId: Int)
+    case stores
     
     private var path: String {
         switch self {
@@ -23,6 +24,7 @@ enum GameApiEndpoints {
         case .gameScreenshots(let gameId):     "games/\(gameId)/screenshots"
         case .gameStores(let gameId):          "games/\(gameId)/stores"
         case .gameVideos(let gameId):          "games/\(gameId)/movies"
+        case .stores:                          "stores"
         }
     }
     
@@ -57,6 +59,8 @@ enum GameApiEndpoints {
             queryItems.append(.init(name: "page_size", value: String(Self.PAGE_SIZE)))
         case .gameVideos:
             break
+        case .stores:
+            queryItems.append(.init(name: "page_size", value: String(Self.PAGE_SIZE)))
         }
         
         components.queryItems = queryItems

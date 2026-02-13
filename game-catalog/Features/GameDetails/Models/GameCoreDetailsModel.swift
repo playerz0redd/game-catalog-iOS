@@ -11,5 +11,6 @@ struct GameCoreDetailsModel {
     let details: GameDetailsModel
     let screenshots: [ScreenshotModel]?
     let videos: [GameVideoModel]?
-    let stores: [GameInStoresModel]?
+    let storesWithGame: [GameInStoresModel]?
+    let stores: [StoreModel]
 }

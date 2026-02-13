@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct GameInStoresModel: Decodable {
+struct GameInStoresModel: Decodable, Hashable {
     let id: Int
     let storeId: Int
     let urlToStore: String

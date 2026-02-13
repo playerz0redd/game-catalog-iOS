@@ -7,7 +7,12 @@
 
 import Foundation
 
-struct GameVideoModel: Decodable {
+struct GameVideoModel: Decodable, Identifiable, Equatable {
+    
+    static func == (lhs: GameVideoModel, rhs: GameVideoModel) -> Bool {
+        lhs.id == rhs.id
+    }
+    
     let id: Int
     let name: String
     let preview: String

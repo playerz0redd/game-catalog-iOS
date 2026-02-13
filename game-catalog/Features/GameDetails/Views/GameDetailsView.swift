@@ -48,6 +48,8 @@ struct GameDetailsView: View {
                     
                     moviesSection
                     
+                    storeListView
+                    
                     
                 }
             }
@@ -72,6 +74,49 @@ struct GameDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         
     }
+}
+
+private extension GameDetailsView {
+    
+    var storeListView: some View {
+        VStack(alignment: .leading) {
+            sectionCaption(caption: "Buy Here")
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                
+                HStack(spacing: 12) {
+                    ForEach(viewModel.detailsModel?.storesWithGame ?? [], id: \.self) { store in
+                        storeView(store: viewModel.storeDictionary[store]!)
+                            .onTapGesture {
+                                viewModel.safariLink = store.urlToStore
+                                viewModel.isShowingSafari = true
+                            }
+                    }
+                }
+                
+            }
+        }
+        .sheet(isPresented: $viewModel.isShowingSafari) {
+            if let url = URL(string: viewModel.safariLink ?? "") {
+                SafariView(url: url)
+            }
+        }
+        
+    }
+    
+    func storeView(store: StoreModel) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(viewModel.getStoreImage(storeId: store.id))
+                .resizable()
+                .scaledToFill()
+                .frame(width: 300, height: 200)
+                .clipped()
+            
+            Text(store.name)
+                .font(.system(size: 13, weight: .semibold))
+        }
+    }
+    
 }
 
 private extension GameDetailsView {
@@ -129,7 +174,7 @@ private extension GameDetailsView {
                 .font(.system(size: 26, weight: .bold))
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
+                HStack(spacing: 12) {
                     ForEach(viewModel.detailsModel?.screenshots ?? [], id: \.id) { screenshot in
                         kfImage(url: screenshot.url)
                     }
@@ -154,7 +199,7 @@ private extension GameDetailsView {
     
     func moviesListView(movies: [GameVideoModel]) -> some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 15) {
+            HStack(spacing: 12) {
                 ForEach(movies, id: \.id) { movie in
                     movieView(movie: movie)
                         .onTapGesture {

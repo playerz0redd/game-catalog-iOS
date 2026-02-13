@@ -14,13 +14,19 @@ struct GameDetailsModel: Decodable {
     let description: String
     let releaseDate: Date
     let imageUrl: String
+    let rating: Double
+    let genres: [GenreModel]
+    let ratingsCount: Int
     
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case originalName = "name_original"
-        case description
+        case description = "description_raw"
         case releaseDate = "released"
         case imageUrl = "background_image"
+        case rating
+        case genres
+        case ratingsCount = "ratings_count"
     }
 }

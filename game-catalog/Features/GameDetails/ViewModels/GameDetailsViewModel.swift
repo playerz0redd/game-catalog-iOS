@@ -18,12 +18,23 @@ final class GameDetailsViewModel: ObservableObject {
     @Published var isShowingVideo: Bool = false
     @Published var selectedMovie: GameVideoModel?
     @Published var isHidingToolbar = false
+    @Published var isShowingSafari = false
+    var safariLink: String?
+    
     
     init(gameId: Int, gamesService: IGamesCatalogService) {
         self.gamesService = gamesService
         fetchGameDetails(gameId: gameId)
         genres = getGenres
     }
+    
+    lazy var storeDictionary: [GameInStoresModel:StoreModel] = {
+        var dict: [GameInStoresModel:StoreModel] = [:]
+        detailsModel?.storesWithGame?.forEach { storeWithGame in
+            dict[storeWithGame] = detailsModel?.stores.first(where: { $0.id == storeWithGame.storeId})!
+        }
+        return dict
+    }()
     
     private var getGenres: String {
         detailsModel?.details.genres.map({ $0.name}).joined(separator: ", ") ?? ""
@@ -80,6 +91,10 @@ final class GameDetailsViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.player?.play()
         }
+    }
+    
+    func getStoreImage(storeId: Int) -> String {
+        StoreModel.Stores.init(rawValue: storeId)?.icon ?? ""
     }
 }
 

@@ -17,6 +17,7 @@ struct GameDetailsModel: Decodable {
     let rating: Double
     let genres: [GenreModel]
     let ratingsCount: Int
+    let platforms: [PlatformModel]
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -28,5 +29,6 @@ struct GameDetailsModel: Decodable {
         case rating
         case genres
         case ratingsCount = "ratings_count"
+        case platforms
     }
 }

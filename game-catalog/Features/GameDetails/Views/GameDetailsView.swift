@@ -50,6 +50,7 @@ struct GameDetailsView: View {
                     
                     storeListView
                     
+                    platformListView
                     
                 }
             }
@@ -59,7 +60,9 @@ struct GameDetailsView: View {
 
             .padding(.horizontal, 10)
             
-            if let movie = viewModel.selectedMovie, let highRes = movie.videos.high, let url = URL(string: highRes) {
+            if let movie = viewModel.selectedMovie,
+               let highRes = movie.videos.high,
+               let url = URL(string: highRes) {
                 MoviePlayerView(movieUrl: url, dismiss: viewModel.onMovieExit)
                     .transition(.asymmetric(
                         insertion: .move(edge: .bottom).combined(with: .opacity),
@@ -117,6 +120,35 @@ private extension GameDetailsView {
         }
     }
     
+}
+
+private extension GameDetailsView {
+    var platformListView: some View {
+        VStack(alignment: .leading) {
+            sectionCaption(caption: "Available On")
+            
+            if let platforms = viewModel.detailsModel?.details.platforms {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(platforms, id: \.platform.id) { platform in
+                            platfromView(name: platform.platform.name)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func platfromView(name: String) -> some View {
+        RoundedRectangle(cornerRadius: 12)
+            .foregroundStyle(LinearGradient(colors: [.blue, .green], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay {
+                Text(name)
+                    .font(.system(size: 23, weight: .bold))
+                    .foregroundStyle(.catalogOrange)
+            }
+            .frame(width: 200, height: 200)
+    }
 }
 
 private extension GameDetailsView {
@@ -198,7 +230,7 @@ private extension GameDetailsView {
     }
     
     func moviesListView(movies: [GameVideoModel]) -> some View {
-        ScrollView(.horizontal) {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(movies, id: \.id) { movie in
                     movieView(movie: movie)
@@ -274,16 +306,16 @@ private extension GameDetailsView {
 private extension GameDetailsView {
     
     @ViewBuilder var gameImage: some View {
-            KFImage(URL(string: viewModel.detailsModel?.details.imageUrl ?? ""))
-                .placeholder { ProgressView() }
-                .onFailure { error in print("Ошибка: \(error)") }
-                .cacheMemoryOnly(false)
-                .fade(duration: 0.25)
-                .resizable()
-                .scaledToFit()
-                .overlay {
-                    LinearGradient(colors: [.black.opacity(0), .black.opacity(0.3), .black.opacity(0.8)], startPoint: .top, endPoint: .bottom)
-                }
+        KFImage(URL(string: viewModel.detailsModel?.details.imageUrl ?? ""))
+            .placeholder { ProgressView() }
+            .onFailure { error in print("Ошибка: \(error)") }
+            .cacheMemoryOnly(false)
+            .fade(duration: 0.25)
+            .resizable()
+            .scaledToFit()
+            .overlay {
+                LinearGradient(colors: [.black.opacity(0), .black.opacity(0.3), .black.opacity(0.8)], startPoint: .top, endPoint: .bottom)
+            }
     }
     
 }

@@ -17,3 +17,27 @@ struct ScreenshotModel: Decodable {
     }
     
 }
+
+extension ScreenshotModel: IDataList {
+    var imageUrl: String {
+        url
+    }
+    
+    var title: String {
+        ""
+    }
+    
+    var action: () -> Void {
+        {}
+    }
+    
+    var isVideo: Bool {
+        false
+    }
+    
+    var videoUrl: String {
+        ""
+    }
+    
+    
+}

@@ -9,21 +9,25 @@ import Foundation
 
 
 protocol INetworkManager {
-    func fetch(url: URL?) async throws -> Data
+    func fetch(url: URL?) async throws(NetworkException) -> Data
 }
 
 struct NetworkManager: INetworkManager {
     
-    func fetch(url: URL?) async throws -> Data {
-        guard let url = url else { return .init() }
+    func fetch(url: URL?) async throws(NetworkException) -> Data {
+        guard let url = url else { throw .urlError }
         let request = URLRequest(url: url)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else { return .init() }
-        
-        return data
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else { throw NSError() }
+            
+            return data
+        } catch let error {
+            throw .requestError(error)
+        }
     }
     
 }

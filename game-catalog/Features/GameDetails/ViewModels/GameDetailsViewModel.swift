@@ -19,11 +19,17 @@ final class GameDetailsViewModel: ObservableObject {
     @Published var selectedMovie: GameVideoModel?
     @Published var isHidingToolbar = false
     @Published var isShowingSafari = false
+    @Published var isShowingViewer = false
+    @Published var selectedContent: ViewerContent?
+    @Published var isLiked: Bool = false
     var safariLink: String?
+
+    let onScreenPush: (DetailsRouter) -> Void
     
     
-    init(gameId: Int, gamesService: IGamesCatalogService) {
+    init(gameId: Int, gamesService: IGamesCatalogService, onScreenPush: @escaping (DetailsRouter) -> Void) {
         self.gamesService = gamesService
+        self.onScreenPush = onScreenPush
         fetchGameDetails(gameId: gameId)
         genres = getGenres
     }
@@ -47,13 +53,15 @@ final class GameDetailsViewModel: ObservableObject {
             async let videos = gamesService.getGameVideos(gameId: gameId)
             async let gameInStores = gamesService.getGameStores(gameId: gameId)
             async let stores = gamesService.getStores()
+            async let developers = gamesService.getCreators(gameId: gameId)
             
             let gameDetails: GameCoreDetailsModel = .init(
                 details: try await details,
                 screenshots: try await screenshots.results,
                 videos: try await videos.results,
                 storesWithGame: try await gameInStores.results,
-                stores: try await stores.results
+                stores: try await stores.results,
+                developers: try await developers.results
             )
             
             await MainActor.run {
@@ -63,17 +71,14 @@ final class GameDetailsViewModel: ObservableObject {
                        let highQualityVideo = video.videos.high {
                         self.player = .init(url: URL(string: highQualityVideo)!)
                         self.player?.isMuted = true
-                        //self.player?.actionAtItemEnd = .advance
-                        return
                     }
-                    if let video = self.detailsModel?.videos?.first,
+                    else if let video = self.detailsModel?.videos?.first,
                        let lowQualityVideo = video.videos.low {
                         self.player = .init(url: URL(string: lowQualityVideo)!)
                         self.player?.isMuted = true
-                        //self.player?.actionAtItemEnd = .advance
-                        return
                     }
                 }
+                self.isLiked = isAddedToFavorites()
             }
         }
     }
@@ -93,49 +98,49 @@ final class GameDetailsViewModel: ObservableObject {
         }
     }
     
+    func isAddedToFavorites() -> Bool {
+        do {
+            let games = try gamesService.fetchGames(id: self.detailsModel?.details.id)
+            return games.isEmpty ? false : true
+        } catch let error {
+            print(error)
+        }
+        return false
+    }
+    
     func getStoreImage(storeId: Int) -> String {
         StoreModel.Stores.init(rawValue: storeId)?.icon ?? ""
+    }
+    
+    func favoritesAction() {
+        isLiked ? deleteFromFavorites() : addToFavorites()
+    }
+    
+    func deleteFromFavorites() {
+        if let gameId = self.detailsModel?.details.id {
+            gamesService.deleteGame(gameId: gameId)
+        }
+        isLiked = false
+    }
+    
+    func addToFavorites() {
+        Task {
+            if let game = self.detailsModel?.details {
+                let gameModel = DatabaseGameModel(
+                    from: game,
+                    image: try await gamesService.fetchImage(url: game.imageUrl)
+                )
+                gamesService.saveGame(game: gameModel)
+            }
+        }
+        isLiked = true
     }
 }
 
 extension GameDetailsViewModel {
-    
-    enum ActionTypes: CaseIterable {
-        case rate
-        case addToLibrary
-        case share
-        case more
-        
-        var caption: LocalizedStringResource {
-            switch self {
-            case .rate:          "Rate"
-            case .addToLibrary:  "Will play"
-            case .share:         "Share"
-            case .more:          "More"
-            }
-        }
-        
-        var image: String {
-            switch self {
-            case .rate:               "star"
-            case .addToLibrary:       "plus.square.on.square"
-            case .share:              "arrowshape.turn.up.right"
-            case .more:               "ellipsis"
-            }
-        }
-        
-        var action: () -> Void {
-            switch self {
-            case .rate:
-                {print("1")}
-            case .addToLibrary:
-                {print("2")}
-            case .share:
-                {print("3")}
-            case .more:
-                {print("4")}
-            }
-        }
+    enum ViewerContent {
+        case trailers
+        case screenshots
+        case developers
     }
-    
 }

@@ -7,17 +7,23 @@
 
 import SwiftUI
 import Kingfisher
+import Firebase
 
 @main
 struct game_catalogApp: App {
     
+    @StateObject private var languageManager: LanguageManager = .init()
+    
     init() {
         configureKingfisher()
+        FirebaseApp.configure()
     }
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView(viewModel: .init(authService: AuthService(authManager: AuthManager())))
+                .environment(\.locale, languageManager.locale)
+                .environmentObject(languageManager)
         }
     }
 }

@@ -19,6 +19,26 @@ struct StoreModel: Decodable, Identifiable, Hashable {
     }
 }
 
+extension StoreModel: IDataList {
+    var title: String {
+        name
+    }
+    
+    var action: () -> Void {
+        {}
+    }
+    
+    var isVideo: Bool {
+        false
+    }
+    
+    var videoUrl: String {
+        ""
+    }
+    
+    
+}
+
 extension StoreModel {
     
     enum Stores: Int {

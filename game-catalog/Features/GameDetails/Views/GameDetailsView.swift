@@ -11,10 +11,10 @@ import AVKit
 
 struct GameDetailsView: View {
     
-    @ObservedObject private var viewModel: GameDetailsViewModel
+    @StateObject private var viewModel: GameDetailsViewModel
     
-    init(viewModel: GameDetailsViewModel) {
-        self.viewModel = viewModel
+    init(service: IGamesCatalogService, gameId: Int, onScreenPush: @escaping (DetailsRouter) -> Void) {
+        self._viewModel = StateObject(wrappedValue: .init(gameId: gameId, gamesService: service, onScreenPush: onScreenPush))
     }
     
     var body: some View {
@@ -52,6 +52,8 @@ struct GameDetailsView: View {
                     
                     platformListView
                     
+                    developersList
+                    
                 }
             }
             .navigationBarBackButtonHidden(viewModel.isHidingToolbar)
@@ -60,30 +62,145 @@ struct GameDetailsView: View {
 
             .padding(.horizontal, 10)
             
-            if let movie = viewModel.selectedMovie,
-               let highRes = movie.videos.high,
-               let url = URL(string: highRes) {
-                MoviePlayerView(movieUrl: url, dismiss: viewModel.onMovieExit)
+            if viewModel.isShowingViewer {
+                switch viewModel.selectedContent {
+                case .trailers:
+                    if let movie = viewModel.selectedMovie,
+                       let highRes = movie.videos.high,
+                       let url = URL(string: highRes) {
+                        ContentViewer(
+                            onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false},
+                            content: {
+                                MoviePlayerView(movieUrl: url)
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .opacity),
+                            removal: .move(edge: .bottom).combined(with: .opacity)
+                        ))
+                    }
+                    
+                case .screenshots:
+                    ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(viewModel.detailsModel?.screenshots ?? [], id: \.id) { screenshot in
+                                    KFImage(URL(string: screenshot.url))
+                                        .resizable()
+                                        .aspectRatio(16/9, contentMode: .fit)
+                                        .containerRelativeFrame(.horizontal)
+                                        .clipped()
+                                }
+                            }
+                            .scrollTargetLayout()
+                        }
+                        .scrollTargetBehavior(.paging)
+                    }
                     .transition(.asymmetric(
                         insertion: .move(edge: .bottom).combined(with: .opacity),
                         removal: .move(edge: .bottom).combined(with: .opacity)
                     ))
-                    .zIndex(1)
+                case .developers:
+                    ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(viewModel.detailsModel?.developers ?? [], id: \.id) { developer in
+                                    KFImage(URL(string: developer.image ?? ""))
+                                        .resizable()
+                                        .aspectRatio(16/9, contentMode: .fit)
+                                        .containerRelativeFrame(.horizontal)
+                                        .clipped()
+                                }
+                            }
+                            .scrollTargetLayout()
+                        }
+                        .scrollTargetBehavior(.paging)
+                    }
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+                case .none:
+                    EmptyView()
+                }
             }
         }
+        .animation(.linear, value: viewModel.isShowingViewer)
         .animation(.smooth, value: viewModel.selectedMovie)
         .animation(.bouncy, value: viewModel.player)
         .navigationTitle("Game Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(viewModel.isShowingViewer ? .hidden : .visible, for: .tabBar)
+        .toolbarVisibility(viewModel.isShowingVideo ? .hidden : .visible, for: .tabBar)
         
     }
+}
+
+private extension GameDetailsView {
+    func buttonMore(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 13) {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 41))
+                    .padding(15)
+                    .background(
+                        Circle()
+                            .fill(Color(.systemGray6))
+                    )
+                
+                Text("Show more")
+                    .font(.system(size: 14, weight: .medium))
+            }
+        }
+        .foregroundStyle(.white)
+    }
+}
+
+private extension GameDetailsView {
+    
+    var developersList: some View {
+        VStack(alignment: .leading) {
+            sectionCaption(caption: "Developed by", action: {viewModel.onScreenPush( DetailsRouter.allDevelopers(developers: viewModel.detailsModel?.developers ?? []))})
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(viewModel.detailsModel?.developers.prefix(3) ?? [], id: \.self) { developer in
+                        if let image = developer.image {
+                            developerView(name: developer.name, image: image)
+                                .onTapGesture {
+                                    viewModel.isShowingViewer = true
+                                    viewModel.selectedContent = .developers
+                                    viewModel.isHidingToolbar = true
+                                }
+                        }
+                    }
+                    if let count = viewModel.detailsModel?.developers.count, count > 3 {
+                        buttonMore(action: {viewModel.onScreenPush( DetailsRouter.allDevelopers(developers: viewModel.detailsModel?.developers ?? []))})
+                    }
+                }
+            }
+        }
+    }
+    
+    func developerView(name: String, image: String) -> some View {
+        VStack(alignment: .leading) {
+            kfImage(url: image)
+                .frame(width: 280, height: 200)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            Text(name)
+                .font(.system(size: 13, weight: .semibold))
+        }
+    }
+    
 }
 
 private extension GameDetailsView {
     
     var storeListView: some View {
         VStack(alignment: .leading) {
-            sectionCaption(caption: "Buy Here")
+            sectionCaption(caption: "Buy Here", action: nil)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 
@@ -114,6 +231,7 @@ private extension GameDetailsView {
                 .scaledToFill()
                 .frame(width: 300, height: 200)
                 .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             
             Text(store.name)
                 .font(.system(size: 13, weight: .semibold))
@@ -125,7 +243,7 @@ private extension GameDetailsView {
 private extension GameDetailsView {
     var platformListView: some View {
         VStack(alignment: .leading) {
-            sectionCaption(caption: "Available On")
+            sectionCaption(caption: "Available On", action: nil)
             
             if let platforms = viewModel.detailsModel?.details.platforms {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -172,7 +290,7 @@ private extension GameDetailsView {
                 .frame(maxWidth: .infinity)
             
             
-            redTextButton(text: "All details about game", action: {})
+            redTextButton(text: "All details about game", action: {viewModel.onScreenPush( DetailsRouter.movieDescription(description: viewModel.detailsModel?.details.description ?? "", ageRating: viewModel.detailsModel?.details.ageRating?.name ?? ""))})
     
         }
     }
@@ -185,8 +303,15 @@ private extension GameDetailsView {
         }
     }
     
-    func sectionCaption(caption: LocalizedStringResource) -> some View {
-        Text(caption)
+    func sectionCaption(caption: LocalizedStringResource, action: (() -> Void)?) -> some View {
+        HStack {
+            Text(caption)
+            
+            Spacer()
+            if let action = action {
+                redTextButton(text: "All", action: action)
+            }
+        }
             .font(.system(size: 26, weight: .bold))
     }
     
@@ -198,17 +323,30 @@ private extension GameDetailsView {
             .aspectRatio(16/9, contentMode: .fill)
             .frame(maxWidth: 340, maxHeight: 220)
             .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     var screenshotBlock: some View {
         VStack(alignment: .leading) {
-            Text("Screenshots")
-                .font(.system(size: 26, weight: .bold))
+            sectionCaption(caption: "Screenshots", action: {
+                viewModel.onScreenPush(DetailsRouter.allScreenshots(screenshots: viewModel.detailsModel?.screenshots ?? [])
+                )
+            })
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(viewModel.detailsModel?.screenshots ?? [], id: \.id) { screenshot in
                         kfImage(url: screenshot.url)
+                            .onTapGesture {
+                                viewModel.isShowingViewer = true
+                                viewModel.selectedContent = .screenshots
+                                viewModel.isHidingToolbar = true
+                            }
+                    }
+                    
+                    buttonMore {
+                        viewModel.onScreenPush(DetailsRouter.allScreenshots(screenshots: viewModel.detailsModel?.screenshots ?? [])
+                        )
                     }
                 }
             }
@@ -222,7 +360,7 @@ private extension GameDetailsView {
     var moviesSection: some View {
         if let movies = viewModel.detailsModel?.videos, !movies.isEmpty {
             VStack(alignment: .leading) {
-                sectionCaption(caption: "Trailers")
+                sectionCaption(caption: "Trailers", action: { viewModel.onScreenPush( DetailsRouter.allVideos(trailers: viewModel.detailsModel?.videos ?? [])) })
                 
                 moviesListView(movies: movies)
             }
@@ -235,8 +373,15 @@ private extension GameDetailsView {
                 ForEach(movies, id: \.id) { movie in
                     movieView(movie: movie)
                         .onTapGesture {
-                            viewModel.onMovieShow(movie: movie)
+                            viewModel.isShowingViewer = true
+                            viewModel.selectedContent = .trailers
+                            viewModel.selectedMovie = movie
+                            viewModel.isHidingToolbar = true
                         }
+                }
+                
+                buttonMore {
+                    viewModel.onScreenPush(DetailsRouter.allVideos(trailers: viewModel.detailsModel?.videos ?? []))
                 }
             }
         }
@@ -276,25 +421,52 @@ private extension GameDetailsView {
     
     var actionBlock: some View {
         HStack(spacing: 35) {
-            ForEach(GameDetailsViewModel.ActionTypes.allCases, id: \.self) { type in
-                actionButton(type: type)
+            
+            actionButton(
+                image: viewModel.isLiked ? "heart.fill" : "heart",
+                caption: "Will play",
+                color: viewModel.isLiked ? .red : .gray,
+                action: viewModel.favoritesAction
+            )
+            
+            if let url = URL(string: viewModel.detailsModel?.storesWithGame?.first?.urlToStore ?? "") {
+                ShareLink(item: url, subject: Text("Rate a game"), message: Text(viewModel.detailsModel?.details.name ?? "Game name")) {
+                    shareButton
+                }
             }
         }
-        .foregroundStyle(.gray)
+    }
+    
+    var shareButton: some View {
+        VStack {
+            Image(systemName: "arrowshape.turn.up.right")
+                .font(.system(size: 23, weight: .medium))
+                .frame(minHeight: 32)
+                .foregroundStyle(.gray)
+            
+            Text("Share")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.gray)
+        }
     }
     
     func actionButton(
-        type: GameDetailsViewModel.ActionTypes
+        image: String,
+        caption: String,
+        color: Color,
+        action: @escaping () -> Void
     ) -> some View {
         
-        Button(action: type.action) {
+        Button(action: action) {
             VStack {
-                Image(systemName: type.image)
+                Image(systemName: image)
                     .font(.system(size: 23, weight: .medium))
                     .frame(minHeight: 32)
+                    .foregroundStyle(color)
                 
-                Text(type.caption)
+                Text(caption)
                     .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.gray)
             }
             
         }

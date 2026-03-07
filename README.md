@@ -68,6 +68,8 @@ Protocol-Oriented Programming (POP): Все сервисы и менеджеры
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 20 54" src="https://github.com/user-attachments/assets/bbbdb605-1948-45ea-a546-84adbb6f317f" /></td>
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 20 14" src="https://github.com/user-attachments/assets/7c8b6a7e-0293-4bd1-9538-0fd123be5e51" /></td>
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 19 18" src="https://github.com/user-attachments/assets/d4658c05-7b61-4932-841a-9f3303b2b300" /></td>
+</tr>
+<tr>
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 18 56" src="https://github.com/user-attachments/assets/9bedb9e0-56cf-4b3f-83d2-8722ee74a5c6" /></td>
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 17 58" src="https://github.com/user-attachments/assets/d02ee9b1-c315-4027-93cc-595013a31541" /></td>
 <td><img width="220" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-07 at 13 17 42" src="https://github.com/user-attachments/assets/492547ed-9d05-4de4-9715-bab440790461" /></td>

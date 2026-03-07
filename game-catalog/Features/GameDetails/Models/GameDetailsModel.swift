@@ -18,6 +18,7 @@ struct GameDetailsModel: Decodable {
     let genres: [GenreModel]
     let ratingsCount: Int
     let platforms: [PlatformModel]
+    let ageRating: EsrbRating?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,5 +31,11 @@ struct GameDetailsModel: Decodable {
         case genres
         case ratingsCount = "ratings_count"
         case platforms
+        case ageRating = "esrb_rating"
+    }
+    
+    struct EsrbRating: Decodable {
+        let id: Int
+        let name: String
     }
 }

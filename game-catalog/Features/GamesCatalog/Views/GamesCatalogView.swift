@@ -10,7 +10,6 @@ import SwiftUI
 
 struct GamesCatalogView: View {
     @ObservedObject private var viewModel: GamesCatalogViewModel
-    @EnvironmentObject var coordinator: AppCoordinator
     
     init(viewModel: GamesCatalogViewModel) {
         self.viewModel = viewModel
@@ -31,13 +30,14 @@ struct GamesCatalogView: View {
                 LazyVGrid(columns: columns) {
                     ForEach(viewModel.games, id: \.id) { game in
                         Button {
-                            coordinator.push(route: .details(gameId: game.id))
+                            viewModel.onScreenPush(CatalogRouter.details(gameId: game.id))
                         } label: {
                             gameCellButton(game: game)
                         }
 
                     }
                 }
+                .padding(.top, 40)
             }
             .padding(.horizontal, 10)
             
@@ -50,23 +50,7 @@ struct GamesCatalogView: View {
                 HStack {
                     genrePickerButton
                     
-                    TextField("",
-                              text: $viewModel.searchText,
-                              prompt: Text("Поиск")
-                        .foregroundStyle(.black)
-                        .font(.system(size: 14, weight: .semibold))
-                    )
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.black)
-                    .padding(.leading, 10)
-                    .padding(.vertical, 6.5)
-                    .background {
-                        Capsule()
-                            .fill(.white.opacity(0.95))
-                    }
-                    .onSubmit {
-                        viewModel.findGameBySearch()
-                    }
+                    searchView
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .padding(.horizontal, 2)
@@ -83,6 +67,7 @@ struct GamesCatalogView: View {
                 viewModel.isHeaderVisible = true
             }
         })
+        .toolbarVisibility(viewModel.isShowingGenres ? .hidden : .visible, for: .tabBar)
         .animation(.bouncy, value: viewModel.games)
         .blur(radius: viewModel.isShowingGenres ? 30 : 0)
         .overlay {
@@ -111,6 +96,30 @@ struct GamesCatalogView: View {
 }
 
 private extension GamesCatalogView {
+    
+    var searchView: some View {
+        TextField("",
+                  text: $viewModel.searchText,
+                  prompt: Text("Find")
+            .foregroundStyle(.black)
+            .font(.system(size: 14, weight: .semibold))
+        )
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundStyle(.black)
+        .padding(.leading, 10)
+        .padding(.vertical, 6.5)
+        .background {
+            Capsule()
+                .fill(.white.opacity(0.95))
+        }
+        .onSubmit {
+            viewModel.findGameBySearch()
+        }
+    }
+    
+}
+
+private extension GamesCatalogView {
     func gameCellButton(game: GameModel) -> some View {
         GameCell(game: game)
             .onAppear {
@@ -130,7 +139,7 @@ private extension GamesCatalogView {
             HStack {
                 CapsuleWithContent {
                     HStack {
-                        Text(viewModel.selectedGenre == nil ? "Жанры" : viewModel.selectedGenre!)
+                        Text(viewModel.selectedGenre == nil ? "Genres" : viewModel.selectedGenre!)
                         
                         Image(systemName: viewModel.selectedGenre == nil ? "chevron.down" : "xmark")
                     }

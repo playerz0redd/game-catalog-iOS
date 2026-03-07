@@ -10,6 +10,7 @@ import Combine
 import UIKit
 
 final class GamesCatalogViewModel: ObservableObject {
+    
     @Published var games: [GameModel] = []
     @Published var isLoading = false
     @Published var isShowingGenres = false
@@ -19,10 +20,11 @@ final class GamesCatalogViewModel: ObservableObject {
     @Published var searchText: String = ""
     
     let gamesCatalogService: IGamesCatalogService
-    var coordinator: AppCoordinator?
+    let onScreenPush: (any IRouter) -> Void
     
-    init(gamesCatalogService: IGamesCatalogService) {
+    init(gamesCatalogService: IGamesCatalogService, onScreenPush: @escaping (any IRouter) -> Void) {
         self.gamesCatalogService = gamesCatalogService
+        self.onScreenPush = onScreenPush
         loadMoreGames()
         getGenres()
     }

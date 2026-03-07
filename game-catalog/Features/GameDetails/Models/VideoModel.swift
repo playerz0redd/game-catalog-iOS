@@ -7,11 +7,7 @@
 
 import Foundation
 
-struct GameVideoModel: Decodable, Identifiable, Equatable {
-    
-    static func == (lhs: GameVideoModel, rhs: GameVideoModel) -> Bool {
-        lhs.id == rhs.id
-    }
+struct GameVideoModel: Decodable, Identifiable, Hashable {
     
     let id: Int
     let name: String
@@ -26,7 +22,7 @@ struct GameVideoModel: Decodable, Identifiable, Equatable {
     }
     
     
-    struct VideoQualityUrls: Decodable {
+    struct VideoQualityUrls: Decodable, Hashable {
         let low: String?
         let high: String?
         
@@ -35,4 +31,28 @@ struct GameVideoModel: Decodable, Identifiable, Equatable {
             case high = "max"
         }
     }
+}
+
+extension GameVideoModel: IDataList {
+    var imageUrl: String {
+        preview
+    }
+    
+    var title: String {
+        name
+    }
+    
+    var action: () -> Void {
+        {}
+    }
+    
+    var isVideo: Bool {
+        true
+    }
+    
+    var videoUrl: String {
+        self.videos.high ?? self.videos.low ?? ""
+    }
+    
+    
 }

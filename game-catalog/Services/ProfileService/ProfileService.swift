@@ -10,11 +10,11 @@ import UIKit
 import FirebaseAuth
 
 protocol IProfileService {
-    func savePhoto(image: UIImage, name: String) throws
+    func savePhoto(image: UIImage, name: String) throws(ProfileServiceError)
     func fetchPhoto(name: String) -> UIImage?
-    func deletePhoto(name: String) throws
+    func deletePhoto(name: String) throws(ProfileServiceError)
     
-    func signOut() throws
+    func signOut() throws(ProfileServiceError)
     func getUser() -> UserProfileModel?
 }
 
@@ -36,11 +36,11 @@ final class ProfileService: IProfileService {
         
     }
     
-    func savePhoto(image: UIImage, name: String) throws {
+    func savePhoto(image: UIImage, name: String) throws(ProfileServiceError) {
         do {
             try storageManager.savePhoto(image: image, name: name)
         } catch let error {
-                
+            throw .storageError(error)
         }
     }
     
@@ -48,19 +48,19 @@ final class ProfileService: IProfileService {
         storageManager.fetchPhoto(name: name)
     }
     
-    func deletePhoto(name: String) throws {
+    func deletePhoto(name: String) throws(ProfileServiceError) {
         do {
             try storageManager.deletePhoto(name: name)
         } catch let error {
-            
+            throw .storageError(error)
         }
     }
     
-    func signOut() throws {
+    func signOut() throws(ProfileServiceError) {
         do {
             try authManager.signOut()
         } catch let error {
-            
+            throw .authError(error)
         }
     }
 }

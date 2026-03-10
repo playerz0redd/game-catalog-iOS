@@ -118,7 +118,12 @@ final class GameDetailsViewModel: ObservableObject {
     
     func deleteFromFavorites() {
         if let gameId = self.detailsModel?.details.id {
-            gamesService.deleteGame(gameId: gameId)
+            do {
+                try gamesService.deleteGame(gameId: gameId)
+            }
+                catch let error {
+                    
+                }
         }
         isLiked = false
     }
@@ -130,7 +135,11 @@ final class GameDetailsViewModel: ObservableObject {
                     from: game,
                     image: try await gamesService.fetchImage(url: game.imageUrl)
                 )
-                gamesService.saveGame(game: gameModel)
+                do {
+                    try gamesService.saveGame(game: gameModel)
+                } catch let error {
+                    
+                }
             }
         }
         isLiked = true

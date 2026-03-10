@@ -38,9 +38,9 @@ extension game_catalogApp {
         
         KingfisherManager.shared.defaultOptions = [
             .requestModifier(modifier),
-            .backgroundDecode, // Тот самый фикс фризов
+            .backgroundDecode,
             .transition(.fade(0.2)),
-            .cacheSerializer(FormatIndicatedCacheSerializer.png) // Быстрее для рендеринга
+            .cacheSerializer(FormatIndicatedCacheSerializer.png)
         ]
     }
 }

@@ -21,22 +21,8 @@ struct GameDetailsView: View {
         ZStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 25) {
-                    ZStack {
-                        if let player = viewModel.player {
-                            VideoPlayer(player: player)
-                                .aspectRatio(16/9, contentMode: .fit)
-                                .onAppear {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                        player.play()
-                                    }
-                                }
-                        }
-                        gameImage
-                            .opacity(viewModel.player == nil ? 1 : 0)
-                    }
                     
-                    Text(viewModel.detailsModel?.details.name ?? "no name")
-                        .font(.system(size: 20, weight: .bold))
+                    headerView
                     
                     infoBlock
                     
@@ -59,71 +45,9 @@ struct GameDetailsView: View {
             .navigationBarBackButtonHidden(viewModel.isHidingToolbar)
             .navigationBarHidden(viewModel.isHidingToolbar)
             .animation(.linear(duration: 0.5))
-
             .padding(.horizontal, 10)
             
-            if viewModel.isShowingViewer {
-                switch viewModel.selectedContent {
-                case .trailers:
-                    if let movie = viewModel.selectedMovie,
-                       let highRes = movie.videos.high,
-                       let url = URL(string: highRes) {
-                        ContentViewer(
-                            onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false},
-                            content: {
-                                MoviePlayerView(movieUrl: url)
-                            }
-                        )
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .bottom).combined(with: .opacity),
-                            removal: .move(edge: .bottom).combined(with: .opacity)
-                        ))
-                    }
-                    
-                case .screenshots:
-                    ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(viewModel.detailsModel?.screenshots ?? [], id: \.id) { screenshot in
-                                    KFImage(URL(string: screenshot.url))
-                                        .resizable()
-                                        .aspectRatio(16/9, contentMode: .fit)
-                                        .containerRelativeFrame(.horizontal)
-                                        .clipped()
-                                }
-                            }
-                            .scrollTargetLayout()
-                        }
-                        .scrollTargetBehavior(.paging)
-                    }
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .move(edge: .bottom).combined(with: .opacity)
-                    ))
-                case .developers:
-                    ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
-                                ForEach(viewModel.detailsModel?.developers ?? [], id: \.id) { developer in
-                                    KFImage(URL(string: developer.image ?? ""))
-                                        .resizable()
-                                        .aspectRatio(16/9, contentMode: .fit)
-                                        .containerRelativeFrame(.horizontal)
-                                        .clipped()
-                                }
-                            }
-                            .scrollTargetLayout()
-                        }
-                        .scrollTargetBehavior(.paging)
-                    }
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .bottom).combined(with: .opacity),
-                        removal: .move(edge: .bottom).combined(with: .opacity)
-                    ))
-                case .none:
-                    EmptyView()
-                }
-            }
+            viewerView
         }
         .animation(.linear, value: viewModel.isShowingViewer)
         .animation(.smooth, value: viewModel.selectedMovie)
@@ -133,6 +57,29 @@ struct GameDetailsView: View {
         .toolbarVisibility(viewModel.isShowingViewer ? .hidden : .visible, for: .tabBar)
         .toolbarVisibility(viewModel.isShowingVideo ? .hidden : .visible, for: .tabBar)
         
+    }
+}
+
+private extension GameDetailsView {
+    @ViewBuilder
+    var headerView: some View {
+        ZStack {
+            if let player = viewModel.player {
+                VideoPlayer(player: player)
+                    .aspectRatio(16/9, contentMode: .fit)
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            player.play()
+                        }
+                    }
+            }
+            
+            gameImage
+                .opacity(viewModel.player == nil ? 1 : 0)
+        }
+        
+        Text(viewModel.detailsModel?.details.name ?? "no name")
+            .font(.system(size: 20, weight: .bold))
     }
 }
 
@@ -349,6 +296,78 @@ private extension GameDetailsView {
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+private extension GameDetailsView {
+    
+    @ViewBuilder
+    var viewerView: some View {
+        
+        // NEEDS REFACTOR
+        
+        if viewModel.isShowingViewer {
+            switch viewModel.selectedContent {
+            case .trailers:
+                if let movie = viewModel.selectedMovie,
+                   let highRes = movie.videos.high,
+                   let url = URL(string: highRes) {
+                    ContentViewer(
+                        onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false},
+                        content: {
+                            MoviePlayerView(movieUrl: url)
+                        }
+                    )
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+                }
+                
+            case .screenshots:
+                ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(viewModel.detailsModel?.screenshots ?? [], id: \.id) { screenshot in
+                                KFImage(URL(string: screenshot.url))
+                                    .resizable()
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .containerRelativeFrame(.horizontal)
+                                    .clipped()
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .scrollTargetBehavior(.paging)
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .move(edge: .bottom).combined(with: .opacity)
+                ))
+            case .developers:
+                ContentViewer(onDismiss: {viewModel.isShowingViewer = false; viewModel.isHidingToolbar = false}) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(viewModel.detailsModel?.developers ?? [], id: \.id) { developer in
+                                KFImage(URL(string: developer.image ?? ""))
+                                    .resizable()
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .containerRelativeFrame(.horizontal)
+                                    .clipped()
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .scrollTargetBehavior(.paging)
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .move(edge: .bottom).combined(with: .opacity)
+                ))
+            case .none:
+                EmptyView()
             }
         }
     }

@@ -33,10 +33,10 @@ final class FavoritesViewModel: ObservableObject {
     }
     
     func likeGame(game: FavoriteModel) {
-        gamesService.saveGame(game: .init(id: game.id, name: game.name, image: game.image))
+        try? gamesService.saveGame(game: .init(id: game.id, name: game.name, image: game.image))
     }
     
     func dislikeGame(gameId: Int) {
-        gamesService.deleteGame(gameId: gameId)
+        try? gamesService.deleteGame(gameId: gameId)
     }
 }

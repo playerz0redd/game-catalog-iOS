@@ -70,7 +70,7 @@ private extension ProfileView {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
                 .background {
-                    RoundedRectangle(cornerRadius: 15)
+                    RoundedRectangle(cornerRadius: 30)
                         .foregroundStyle(LinearGradient(colors: [.init(red: 42/255, green: 103/255, blue: 232/255), .init(red: 47/255, green: 140/255, blue: 188/255)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 }
         }

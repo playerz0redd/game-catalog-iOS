@@ -12,7 +12,6 @@ import AVKit
 final class GameDetailsViewModel: ObservableObject {
     
     @Published var detailsModel: GameCoreDetailsModel?
-    private let gamesService: IGamesCatalogService
     @Published var player: AVPlayer?
     @Published var genres: String = ""
     @Published var isShowingVideo: Bool = false
@@ -22,14 +21,18 @@ final class GameDetailsViewModel: ObservableObject {
     @Published var isShowingViewer = false
     @Published var selectedContent: ViewerContent?
     @Published var isLiked: Bool = false
+    @Published var viewState: ViewState<GamesCatalogServiceError>
+    
     var safariLink: String?
 
     let onScreenPush: (DetailsRouter) -> Void
+    private let gamesService: IGamesCatalogService
     
     
     init(gameId: Int, gamesService: IGamesCatalogService, onScreenPush: @escaping (DetailsRouter) -> Void) {
         self.gamesService = gamesService
         self.onScreenPush = onScreenPush
+        self.viewState = .loading
         fetchGameDetails(gameId: gameId)
         genres = getGenres
     }
@@ -48,37 +51,50 @@ final class GameDetailsViewModel: ObservableObject {
     
     private func fetchGameDetails(gameId: Int) {
         Task(priority: .high) {
-            async let details = gamesService.getGameDetails(gameId: gameId)
-            async let screenshots = gamesService.getGameScreenshots(gameId: gameId)
-            async let videos = gamesService.getGameVideos(gameId: gameId)
-            async let gameInStores = gamesService.getGameStores(gameId: gameId)
-            async let stores = gamesService.getStores()
-            async let developers = gamesService.getCreators(gameId: gameId)
             
-            let gameDetails: GameCoreDetailsModel = .init(
-                details: try await details,
-                screenshots: try await screenshots.results,
-                videos: try await videos.results,
-                storesWithGame: try await gameInStores.results,
-                stores: try await stores.results,
-                developers: try await developers.results
-            )
-            
-            await MainActor.run {
-                self.detailsModel = gameDetails
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    if let video = self.detailsModel?.videos?.first,
-                       let highQualityVideo = video.videos.high {
-                        self.player = .init(url: URL(string: highQualityVideo)!)
-                        self.player?.isMuted = true
+            do {
+                async let details = gamesService.getGameDetails(gameId: gameId)
+                async let screenshots = gamesService.getGameScreenshots(gameId: gameId)
+                async let videos = gamesService.getGameVideos(gameId: gameId)
+                async let gameInStores = gamesService.getGameStores(gameId: gameId)
+                async let stores = gamesService.getStores()
+                async let developers = gamesService.getCreators(gameId: gameId)
+                
+                let gameDetails: GameCoreDetailsModel = .init(
+                    details: try await details,
+                    screenshots: try await screenshots.results,
+                    videos: try await videos.results,
+                    storesWithGame: try await gameInStores.results,
+                    stores: try await stores.results,
+                    developers: try await developers.results
+                )
+                
+                await MainActor.run {
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        self.viewState = .success
                     }
-                    else if let video = self.detailsModel?.videos?.first,
-                       let lowQualityVideo = video.videos.low {
-                        self.player = .init(url: URL(string: lowQualityVideo)!)
-                        self.player?.isMuted = true
+                    
+                    self.detailsModel = gameDetails
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        if let video = self.detailsModel?.videos?.first,
+                           let highQualityVideo = video.videos.high {
+                            self.player = .init(url: URL(string: highQualityVideo)!)
+                            self.player?.isMuted = true
+                        }
+                        else if let video = self.detailsModel?.videos?.first,
+                                let lowQualityVideo = video.videos.low {
+                            self.player = .init(url: URL(string: lowQualityVideo)!)
+                            self.player?.isMuted = true
+                        }
                     }
+                    self.isLiked = isAddedToFavorites()
                 }
-                self.isLiked = isAddedToFavorites()
+            }
+            catch let error as GamesCatalogServiceError {
+                await MainActor.run {
+                    self.viewState = .error(error)
+                }
             }
         }
     }
@@ -118,12 +134,17 @@ final class GameDetailsViewModel: ObservableObject {
     
     func deleteFromFavorites() {
         if let gameId = self.detailsModel?.details.id {
-            do {
-                try gamesService.deleteGame(gameId: gameId)
-            }
-                catch let error {
-                    
+            Task {
+                do {
+                    try gamesService.deleteGame(gameId: gameId)
+                    try await gamesService.deleteGameFromRemote(gameId: gameId)
                 }
+                catch let error as GamesCatalogServiceError {
+                    await MainActor.run {
+                        self.viewState = .error(error)
+                    }
+                }
+            }
         }
         isLiked = false
     }
@@ -131,14 +152,16 @@ final class GameDetailsViewModel: ObservableObject {
     func addToFavorites() {
         Task {
             if let game = self.detailsModel?.details {
-                let gameModel = DatabaseGameModel(
-                    from: game,
-                    image: try await gamesService.fetchImage(url: game.imageUrl)
-                )
+                
+                let remoteModel = FavoriteGameRemoteDatabaseModel(from: game)
                 do {
-                    try gamesService.saveGame(game: gameModel)
-                } catch let error {
-                    
+                    try await gamesService.saveGame(game: .init(id: game.id, name: game.name, backgroundImage: game.imageUrl))
+                    try gamesService.saveGameToRemote(gameModel: remoteModel)
+                }
+                catch let error as GamesCatalogServiceError {
+                    await MainActor.run {
+                        self.viewState = .error(error)
+                    }
                 }
             }
         }

@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+
+protocol IAppError: LocalizedError, Equatable {
+    var errorDescription: LocalizedStringResource { get }
+    var needsRefresh: Bool { get }
+}

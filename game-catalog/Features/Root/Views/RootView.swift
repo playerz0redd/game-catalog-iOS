@@ -25,12 +25,6 @@ struct RootView: View {
             
         }
         .animation(.bouncy, value: viewModel.isSigned)
-        .toolbarVisibility(viewModel.isShowingSplash ? .hidden : .visible, for: .tabBar)
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                viewModel.isShowingSplash = false
-            }
-        }
         .animation(.bouncy, value: viewModel.isShowingSplash)
         
     }
@@ -40,7 +34,7 @@ private extension RootView {
     
     @ViewBuilder
     var startScreen: some View {
-        Group {
+        ZStack {
             if viewModel.isSigned {
                 tabView
             } else {
@@ -61,6 +55,11 @@ private extension RootView {
                 .playbackMode(.playing(.toProgress(1, loopMode: .loop)))
                 .frame(width: Constants.UIConstants.screenWidth, height: Constants.UIConstants.screenHeight)
                 .transition(.opacity.combined(with: .scale).combined(with: .move(edge: .top)))
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        viewModel.isShowingSplash = false
+                    }
+                }
         }
     }
 }

@@ -18,36 +18,46 @@ final class GamesCatalogViewModel: ObservableObject {
     @Published var selectedGenre: String?
     @Published var isHeaderVisible: Bool = true
     @Published var searchText: String = ""
+    @Published var viewState: ViewState<GamesCatalogServiceError>
     
     let gamesCatalogService: IGamesCatalogService
     let onScreenPush: (any IRouter) -> Void
     
+    private var currentPage = 1
+    
     init(gamesCatalogService: IGamesCatalogService, onScreenPush: @escaping (any IRouter) -> Void) {
         self.gamesCatalogService = gamesCatalogService
         self.onScreenPush = onScreenPush
+        self.viewState = .loading
         loadMoreGames()
         getGenres()
     }
     
     func loadMoreGames() {
-        guard !isLoading else { return }
-        isLoading = true
-        
+        self.isHeaderVisible = true
         Task(priority: .userInitiated) {
-            let response = try await gamesCatalogService.fetchGamesList(
-                genre: selectedGenre,
-                search: searchText == "" ? nil : searchText
-            )
-            
-            let newGames = response.results
-            
-            let urls = newGames.compactMap({ $0.backgroundImage })
-            
-            gamesCatalogService.prefetchImages(urls: urls)
-            
-            await MainActor.run {
-                self.games += newGames
-                isLoading = false
+            do {
+                let response = try await gamesCatalogService.fetchGamesList(
+                    genre: selectedGenre,
+                    search: searchText == "" ? nil : searchText,
+                    page: currentPage
+                )
+                
+                let newGames = response.results
+                
+                let urls = newGames.compactMap({ $0.backgroundImage })
+                
+                gamesCatalogService.prefetchImages(urls: urls)
+                
+                await MainActor.run {
+                    self.games += newGames
+                    currentPage += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.viewState = .success
+                    }
+                }
+            } catch let error as GamesCatalogServiceError {
+                viewState = .error(error)
             }
         }
     }
@@ -55,6 +65,8 @@ final class GamesCatalogViewModel: ObservableObject {
     func onGenreButtonClick() {
         if selectedGenre != nil {
             selectedGenre = nil
+            self.viewState = .loading
+            currentPage = 1
             games = []
             loadMoreGames()
         } else {
@@ -64,22 +76,31 @@ final class GamesCatalogViewModel: ObservableObject {
     
     func findGameBySearch() {
         games = []
+        self.viewState = .loading
+        currentPage = 1
         loadMoreGames()
     }
     
     func getGenres() {
         Task {
-            let response = try await gamesCatalogService.getGenres()
-            self.genres = response.results
+            do {
+                let response = try await gamesCatalogService.getGenres()
+                self.genres = response.results
+                
+            } catch let error as GamesCatalogServiceError {
+                viewState = .error(error)
+            }
         }
     }
 
     func onGenreSelect(genre: String) {
         selectedGenre = genre
         games = []
+        currentPage = 1
         loadMoreGames()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             self.isShowingGenres = false
+            self.viewState = .loading
         }
     }
 }

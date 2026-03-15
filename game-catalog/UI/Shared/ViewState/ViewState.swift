@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum ViewState<T: IAppError>: Equatable {
+    case loading
+    case error(T)
+    case success
+}

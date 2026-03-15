@@ -25,7 +25,7 @@ struct AuthView: View {
                 inputFields
                 
                 actionButton
-            
+                
             }
             .padding(15)
             .background {
@@ -37,6 +37,14 @@ struct AuthView: View {
             
         }
         .animation(.bouncy, value: viewModel.authType)
+        .alert("Error occured :(", isPresented: $viewModel.isShowingAlert) {
+            Button("OK", role: .close) {
+                viewModel.isShowingAlert = false
+            } 
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        
     }
 }
 
@@ -65,22 +73,22 @@ private extension AuthView {
         VStack(alignment: .leading, spacing: 10) {
             
             if viewModel.authType == .registration {
-                textField(isSecured: false, value: $viewModel.authModel.name, title: "Name", prompt: "Enter Your Name")
+                textField(fieldType: .name, value: $viewModel.authModel.name, title: "Name", prompt: "Enter Your Name")
             }
             
-            textField(isSecured: false, value: $viewModel.authModel.email, title: "Email", prompt: "example@mail.com")
+            textField(fieldType: .email, value: $viewModel.authModel.email, title: "Email", prompt: "example@mail.com")
                 .keyboardType(.emailAddress)
             
-            textField(isSecured: true, value: $viewModel.authModel.password, title: "Password", prompt: "Enter Your Password")
+            textField(fieldType: .password, value: $viewModel.authModel.password, title: "Password", prompt: "Enter Your Password")
             
             if viewModel.authType == .registration {
-                textField(isSecured: true, value: $viewModel.authModel.confirmPassword, title: "Confirm Password", prompt: "Confirm Your Password")
+                textField(fieldType: .confirmPassword, value: $viewModel.authModel.confirmPassword, title: "Confirm Password", prompt: "Confirm Your Password")
             }
         }
     }
     
     func textField(
-        isSecured: Bool,
+        fieldType: AuthViewModel.AuthField,
         value: Binding<String>,
         title: LocalizedStringResource,
         prompt: String
@@ -89,7 +97,7 @@ private extension AuthView {
             Text(title)
                 .font(.system(size: 14, weight: .semibold))
             
-            if !isSecured {
+            if fieldType == .name || fieldType == .email {
                 TextField("", text: value, prompt: Text(prompt).font(.system(size: 20, weight: .medium)))
                     .padding(15)
                     .background {
@@ -104,7 +112,15 @@ private extension AuthView {
                             .fill(.appGray)
                     }
             }
+            
+            if let error = viewModel.hasError(for: fieldType) {
+                Text(error.errorDescription)
+                    .foregroundStyle(.red)
+                    .font(.system(size: 14, weight: .regular))
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut, value: viewModel.errors)
     }
 }
 

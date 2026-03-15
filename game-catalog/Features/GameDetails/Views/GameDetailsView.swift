@@ -8,6 +8,7 @@
 import SwiftUI
 import Kingfisher
 import AVKit
+import Shimmer
 
 struct GameDetailsView: View {
     
@@ -18,6 +19,27 @@ struct GameDetailsView: View {
     }
     
     var body: some View {
+        
+        ZStack {
+            switch viewModel.viewState {
+            case .loading:
+                DetailsSceletonView()
+                    .transition(.opacity.combined(with: .scale))
+            case .error(let error):
+                Text(error.errorDescription)
+                    .transition(.opacity.combined(with: .scale))
+            case .success:
+                detailsView
+                    .transition(.opacity.combined(with: .scale))
+            }
+        }
+        .animation(.bouncy, value: viewModel.viewState)
+        
+    }
+}
+
+private extension GameDetailsView {
+    var detailsView: some View {
         ZStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 25) {
@@ -56,7 +78,6 @@ struct GameDetailsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarVisibility(viewModel.isShowingViewer ? .hidden : .visible, for: .tabBar)
         .toolbarVisibility(viewModel.isShowingVideo ? .hidden : .visible, for: .tabBar)
-        
     }
 }
 

@@ -20,6 +20,11 @@ struct GameCell: View {
 
         VStack(alignment: .leading, spacing: 8) {
             imageView
+                .overlay(alignment: .topLeading) {
+                    ratingView
+                        .padding(.leading, 10)
+                        .padding(.top, 10)
+                }
             
             textLabel
         }
@@ -28,6 +33,17 @@ struct GameCell: View {
 }
 
 private extension GameCell {
+    
+    var ratingView: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "star.fill")
+            Text(String(game.rating ?? 0))
+        }
+        .font(.system(size: 17, weight: .semibold))
+        .padding(5)
+        .foregroundStyle(.white)
+        .background(Capsule().foregroundStyle(.yellow))
+    }
     
     var imageView: some View {
         Color.gray.opacity(0.3)
@@ -43,7 +59,7 @@ private extension GameCell {
                     .scaledToFill()
             )
             .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 17))
     }
     
     var textLabel: some View {

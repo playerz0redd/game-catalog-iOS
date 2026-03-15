@@ -41,7 +41,7 @@ final class AuthService: IAuthService {
         do {
             try await authManager.signIn(email: email, password: passsword)
         } catch let error {
-            throw .singInError(error)
+            throw .signInError(error)
         }
     }
     

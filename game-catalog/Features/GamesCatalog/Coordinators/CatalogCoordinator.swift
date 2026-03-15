@@ -24,7 +24,7 @@ final class CatalogCoordinator: ObservableObject {
     
     init() {
         networkManager = NetworkManager()
-        gamesService = GamesCatalogService(networkManager: networkManager, persistanceManager: PersistanceManager.shared)
+        gamesService = GamesCatalogService(dependency: .init(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared, authManager: AuthManager(), remoteDatabaseProvider: FirestoreManager()))
     }
     
     private func push(route: any IRouter) {

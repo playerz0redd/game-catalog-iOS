@@ -21,30 +21,59 @@ struct GamesCatalogView: View {
     ]
     
     var body: some View {
-        
-        ScrollView {
-            
-            VStack(alignment: .leading) {
-
-                
-                LazyVGrid(columns: columns) {
-                    ForEach(viewModel.games, id: \.id) { game in
-                        Button {
-                            viewModel.onScreenPush(CatalogRouter.details(gameId: game.id))
-                        } label: {
-                            gameCellButton(game: game)
-                        }
-
-                    }
-                }
-                .padding(.top, 40)
-            }
-            .padding(.horizontal, 10)
-            
-            if viewModel.isLoading {
-                ProgressView()
+        ZStack {
+            switch viewModel.viewState {
+            case .loading:
+                GamesCatalogSceleton()
+                    .transition(.opacity.combined(with: .scale))
+            case .error(let error):
+                Text(error.errorDescription)
+                    .transition(.opacity.combined(with: .scale))
+            case .success:
+                catalogView
+                    .transition(.opacity.combined(with: .scale))
             }
         }
+        .navigationTitle("Games")
+        .navigationBarTitleDisplayMode(.inline)
+        .animation(.bouncy, value: viewModel.viewState)
+
+    
+    }
+}
+
+private extension GamesCatalogView {
+    var catalogView: some View {
+        ZStack(alignment: .top) {
+            if !viewModel.games.isEmpty {
+                ScrollView {
+                    
+                    VStack(alignment: .leading) {
+                        
+                        LazyVGrid(columns: columns) {
+                            ForEach(viewModel.games, id: \.id) { game in
+                                Button {
+                                    viewModel.onScreenPush(CatalogRouter.details(gameId: game.id))
+                                } label: {
+                                    gameCellButton(game: game)
+                                }
+                                
+                            }
+                        }
+                        .padding(.top, 40)
+                    }
+                    .padding(.horizontal, 10)
+                    
+                    if viewModel.isLoading {
+                        ProgressView()
+                    }
+                }
+            } else {
+                ContentUnavailableView("Nothing Was Found :(", systemImage: "tray", description: Text("Try searching something else."))
+                //Text("Not Found :(")
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .overlay(alignment: .top) {
             if viewModel.isHeaderVisible {
                 HStack {
@@ -89,32 +118,50 @@ struct GamesCatalogView: View {
             .ignoresSafeArea()
         }
         .animation(.easeInOut, value: viewModel.isShowingGenres)
-        .navigationTitle("Game Details")
-        .navigationBarTitleDisplayMode(.inline)
-    
     }
 }
 
 private extension GamesCatalogView {
     
     var searchView: some View {
-        TextField("",
-                  text: $viewModel.searchText,
-                  prompt: Text("Find")
-            .foregroundStyle(.black)
+        ZStack(alignment: .trailing) {
+            TextField("",
+                      text: $viewModel.searchText,
+                      prompt: Text("Find")
+                .foregroundStyle(.black)
+                .font(.system(size: 14, weight: .semibold))
+            )
             .font(.system(size: 14, weight: .semibold))
-        )
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(.black)
-        .padding(.leading, 10)
-        .padding(.vertical, 6.5)
-        .background {
-            Capsule()
-                .fill(.white.opacity(0.95))
+            .foregroundStyle(.black)
+            .padding(.leading, 10)
+            .padding(.trailing, 25)
+            .padding(.vertical, 6.5)
+            .background {
+                Capsule()
+                    .fill(.white.opacity(0.95))
+            }
+            .onSubmit {
+                viewModel.findGameBySearch()
+            }
+        
+            if viewModel.searchText != "" {
+                Button {
+                    viewModel.searchText = ""
+                    viewModel.findGameBySearch()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(.black)
+                        .font(.system(size: 20, weight: .semibold))
+                        .padding(8)
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .trailing))
+                    .combined(with: .opacity)
+                )
+            }
         }
-        .onSubmit {
-            viewModel.findGameBySearch()
-        }
+        .animation(.bouncy, value: viewModel.searchText)
     }
     
 }
@@ -123,7 +170,8 @@ private extension GamesCatalogView {
     func gameCellButton(game: GameModel) -> some View {
         GameCell(game: game)
             .onAppear {
-                if game.id == viewModel.games[viewModel.games.count - 10].id {
+                if viewModel.games.count > 10 &&
+                    game.id == viewModel.games[viewModel.games.count - 10].id {
                     viewModel.loadMoreGames()
                 }
             }

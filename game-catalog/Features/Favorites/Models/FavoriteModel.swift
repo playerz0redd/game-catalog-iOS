@@ -11,5 +11,6 @@ struct FavoriteModel: Hashable {
     let id: Int
     let name: String
     let image: Data
+    let imagePath: String
     var isLiked: Bool = true
 }

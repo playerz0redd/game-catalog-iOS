@@ -10,9 +10,9 @@ import FirebaseAuth
 import Combine
 
 protocol IAuthManager {
-    func createUser(email: String, password: String, name: String) async throws(AuthExceptions)
-    func signIn(email: String, password: String) async throws(AuthExceptions)
-    func signOut() throws(AuthExceptions)
+    func createUser(email: String, password: String, name: String) async throws(AuthError)
+    func signIn(email: String, password: String) async throws(AuthError)
+    func signOut() throws(AuthError)
     var userPublisher: AnyPublisher<User?, Never> { get }
     var isUserSigned: Bool { get }
     var getUser: User? { get }
@@ -42,7 +42,7 @@ final class AuthManager: IAuthManager {
     }
     
     
-    func createUser(email: String, password: String, name: String) async throws(AuthExceptions) {
+    func createUser(email: String, password: String, name: String) async throws(AuthError) {
         do {
             let result = try await auth.createUser(withEmail: email, password: password)
             
@@ -57,7 +57,7 @@ final class AuthManager: IAuthManager {
         }
     }
     
-    func signIn(email: String, password: String) async throws(AuthExceptions) {
+    func signIn(email: String, password: String) async throws(AuthError) {
         do {
             try await auth.signIn(withEmail: email, password: password)
         } catch let error {
@@ -66,7 +66,7 @@ final class AuthManager: IAuthManager {
     }
         
     
-    func signOut() throws(AuthExceptions) {
+    func signOut() throws(AuthError) {
         do {
             try auth.signOut()
         } catch let error {

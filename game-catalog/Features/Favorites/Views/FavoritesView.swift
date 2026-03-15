@@ -16,6 +16,37 @@ struct FavoritesView: View {
     }
     
     var body: some View {
+        ZStack {
+            switch viewModel.viewState {
+            case .loading:
+                FavoritesViewSceleton()
+                    .transition(.opacity)
+            case .error(let error):
+                Text(error.errorDescription)
+                    .transition(.opacity)
+            case .success:
+                if viewModel.favoriteGames.isEmpty {
+                    ContentUnavailableView("Nothing Was Found", systemImage: "tray", description: Text("Add some games to favorites"))
+                        .transition(.opacity)
+                } else {
+                    favoritesView
+                        .transition(.opacity)
+                }
+            }
+        }
+        .animation(.bouncy, value: viewModel.viewState)
+        .animation(.bouncy, value: viewModel.favoriteGames)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Favorites")
+        .padding(.horizontal, 5)
+        .onAppear {
+            viewModel.fetchFavoriteGames()
+        }
+    }
+}
+
+private extension FavoritesView {
+    var favoritesView: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 10) {
                 ForEach($viewModel.favoriteGames, id: \.self) { game in
@@ -26,10 +57,6 @@ struct FavoritesView: View {
                 }
             }
         }
-        .animation(.bouncy, value: viewModel.favoriteGames)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Favorites")
-        .padding(.horizontal, 5)
     }
 }
 
@@ -45,9 +72,6 @@ private extension FavoritesView {
                         .font(.system(size: 42))
                         .onTapGesture {
                             viewModel.onLikeAction(game: game.wrappedValue)
-                            withAnimation(.bouncy) {
-                                game.wrappedValue.isLiked.toggle()
-                            }
                         }
                         .padding(.top, 15)
                         .padding(.trailing, 15)

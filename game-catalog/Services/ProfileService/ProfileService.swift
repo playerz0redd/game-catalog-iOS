@@ -38,19 +38,30 @@ final class ProfileService: IProfileService {
     
     func savePhoto(image: UIImage, name: String) throws(ProfileServiceError) {
         do {
-            try storageManager.savePhoto(image: image, name: name)
+            try storageManager.savePhoto(image: image, name: configurePath(name: name, uid: uid))
         } catch let error {
             throw .storageError(error)
         }
     }
     
+    private func configurePath(name: String, uid: String) -> String {
+        "\(uid)/\(name)"
+    }
+    
+    private var uid: String {
+        if let uid = authManager.getUser?.uid {
+            return uid
+        }
+        return "no uid"
+    }
+    
     func fetchPhoto(name: String) -> UIImage? {
-        storageManager.fetchPhoto(name: name)
+        storageManager.fetchPhoto(name: configurePath(name: name, uid: uid))
     }
     
     func deletePhoto(name: String) throws(ProfileServiceError) {
         do {
-            try storageManager.deletePhoto(name: name)
+            try storageManager.deletePhoto(name: configurePath(name: name, uid: uid))
         } catch let error {
             throw .storageError(error)
         }

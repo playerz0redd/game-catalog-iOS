@@ -10,7 +10,7 @@ import SwiftUI
 import Shimmer
 
 
-struct DeveloperViewSceleton: View {
+struct FavoritesViewSceleton: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {

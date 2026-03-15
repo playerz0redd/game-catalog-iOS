@@ -12,9 +12,9 @@ struct DetailsSceletonView: View {
     var body: some View {
         VStack(spacing: 30) {
             
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: 17)
                 .frame(maxWidth: .infinity)
-                .frame(height: Constants.UIConstants.screenHeight / 3)
+                .frame(height: Constants.UIConstants.screenHeight / 2.5)
             
             VStack(spacing: 10) {
                 RoundedRectangle(cornerRadius: 14)
@@ -43,10 +43,14 @@ struct DetailsSceletonView: View {
                 RoundedRectangle(cornerRadius: 14)
                     .frame(width: 250, height: 30)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 20)
+            
+            Spacer()
         }
-        .ignoresSafeArea(edges: .top)
+        .padding(.top, 50)
         .foregroundStyle(.appGray)
-        .shimmering(gradient)
+        .shimmering()
     }
 }
 

@@ -27,7 +27,7 @@ final class DevelopersCoordinator: ObservableObject {
                 self.push(route: route)
             })
         case .gameDetails(let gameId):
-            GameDetailsView(service: GamesCatalogService(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared), gameId: gameId, onScreenPush: { route in
+            GameDetailsView(service: GamesCatalogService(dependency: .init(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared, authManager: AuthManager(), remoteDatabaseProvider: FirestoreManager())), gameId: gameId, onScreenPush: { route in
                 self.push(route: route)
             })
         }

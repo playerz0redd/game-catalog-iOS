@@ -12,14 +12,37 @@ struct DevelopersView: View {
     @StateObject private var viewModel: DevelopersViewModel
     
     init(pushScreenAction: @escaping (_: DevelopersRouter) -> Void) {
-        self._viewModel = StateObject(wrappedValue: DevelopersViewModel(service: GamesCatalogService(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared), pushScreenAction: pushScreenAction))
+        self._viewModel = StateObject(wrappedValue: DevelopersViewModel(service: GamesCatalogService(dependency: .init(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared, authManager: AuthManager(), remoteDatabaseProvider: FirestoreManager())), pushScreenAction: pushScreenAction))
     }
     
     var body: some View {
-        developersList
-            .navigationTitle("Developers")
-            .navigationBarTitleDisplayMode(.inline)
-            .padding(.horizontal, 8)
+        
+        ZStack {
+            switch viewModel.viewState {
+            case .loading:
+                DeveloperViewSceleton()
+                    .transition(.opacity)
+            case .error(let error):
+                Text(error.errorDescription)
+                    .transition(.opacity)
+            case .success:
+                developersList
+                    .navigationTitle("Developers")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .transition(.opacity)
+            }
+            
+        }
+        .alert("Error", isPresented: $viewModel.isShowingAlert) {
+            Button("OK", role: .close) {
+                viewModel.isShowingAlert = false
+            }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+        .padding(.horizontal, 8)
+        .animation(.bouncy, value: viewModel.viewState)
+        
     }
 }
 

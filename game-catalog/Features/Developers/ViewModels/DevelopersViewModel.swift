@@ -12,32 +12,47 @@ final class DevelopersViewModel: ObservableObject {
     
     @Published var developers: [DeveloperModel] = []
     @Published var selectedDeveloperId: Int?
+    @Published var viewState: ViewState<GamesCatalogServiceError>
+    @Published var isShowingAlert = false
     
     let pushScreenAction: (_: DevelopersRouter) -> Void
     
     private let service: IGamesCatalogService
     private(set) var page: Int = 0
-    private var isLoading = false
     
     init(service: IGamesCatalogService, pushScreenAction: @escaping (_: DevelopersRouter) -> Void) {
         self.service = service
         self.pushScreenAction = pushScreenAction
+        self.viewState = .loading
         self.getDevelopers()
     }
     
+    var errorMessage: LocalizedStringResource {
+        if case .error(let error) = viewState {
+            return error.errorDescription
+        }
+        return "Unknown error"
+    }
+    
     func getDevelopers() {
-        isLoading = true
         Task {
-            let developers = try await service.getDevelopers(page: getPage())
-            await MainActor.run {
-                self.developers.append(contentsOf: developers.results)
-                isLoading = false
+            do {
+                let developers = try await service.getDevelopers(page: getPage())
+                await MainActor.run {
+                    self.developers.append(contentsOf: developers.results)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.viewState = .success
+                    }
+                }
+            } catch let error as GamesCatalogServiceError {
+                self.viewState = .error(error)
+                self.isShowingAlert = true
             }
         }
     }
     
     func paginateDevelopers(currentId: Int) {
-        if currentId == developers[self.developers.count - 10].id, !isLoading {
+        if currentId == developers[self.developers.count - 10].id, viewState != .loading {
             getDevelopers()
         }
     }

@@ -18,7 +18,7 @@ final class FavoritesCoordinator: ObservableObject {
     init() {
         self.networkManager = NetworkManager()
         self.persistanseManager = PersistanceManager.shared
-        self.gamesService = GamesCatalogService(networkManager: networkManager, persistanceManager: persistanseManager)
+        self.gamesService = GamesCatalogService(dependency: .init(networkManager: NetworkManager(), persistanceManager: PersistanceManager.shared, authManager: AuthManager(), remoteDatabaseProvider: FirestoreManager()))
     }
     
     func push(route: any IRouter) {

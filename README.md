@@ -1,4 +1,4 @@
-GameHub — iOS-клиент каталога игр  
+
 ![alt text](https://img.shields.io/badge/Swift-5.9+-orange.svg)
 
 ![alt text](https://img.shields.io/badge/Architecture-MVVM--C-green.svg)
@@ -57,7 +57,7 @@ Combine: Использование CurrentValueSubject и AnyPublisher для �
 
 Реактивная смена языка без перезагрузки приложения (LanguageManager).
 
-⚠️ Система обработки ошибок
+⚠️ Система обработки ошибок  
 Базовый протокол IAppError, наследующийся от LocalizedError.
 
 Использование Typed Throws из Swift 5.9+ (например, throws(GamesCatalogServiceError)).
@@ -80,7 +80,7 @@ Kingfisher: Асинхронная загрузка изображений, же
 Локализация
 Apple String Catalogs (.xcstrings): Поддержка английского и русского языков. Смена языка доступна прямо в настройках профиля приложения.
 
-Основные функции
+Основные функции  
 🔍 Умный каталог и поиск: Пагинация, поиск по тексту, фильтрация по категориям. Скрытие хедера при скролле вниз.
 
 📖 Детальная карточка игры: Интеграция с In-App Safari для перехода в магазины покупок. Просмотр скриншотов с пагингом.

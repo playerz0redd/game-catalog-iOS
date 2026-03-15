@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum DecoderException: Error {
+enum DecoderError: Error {
     case decoderError(Error)
     case decodeToImageError
 }
